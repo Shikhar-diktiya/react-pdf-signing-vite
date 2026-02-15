@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.sigCanvas {
+  width: 100%;
+  height: 150px;
+}
+
+.btn {
+  @apply px-4 py-2 bg-blue-500 text-white rounded shadow hover:bg-blue-600;
+}
+
+.pdf-container {
+  @apply flex justify-center w-full overflow-auto bg-gray-100;
+  height: 90vh; /* Enough space to scroll full A4 */
+}
+
+.pdf-box {
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+  background-color: white;
+  @apply border border-gray-400 shadow-xl rounded-md relative;
+}
+
+iframe {
+  width: 100%;
+  height: 8000px; /* Full height of your PDF page */
+  border: none;
+  pointer-events: none;
+  position: relative;
+  z-index: 1;
+}
+.modal-backdrop {
+  @apply fixed inset-0 bg-black bg-opacity-50 z-40;
+}
+
+.modal-content {
+  @apply bg-white p-5 rounded-lg shadow-md z-50;
+}
+.sigCanvas {
+  background: white; /* important if PDF background is also white */
+}
+
+.pdf-signer-container {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  font-family: sans-serif;
+}
+
+.sidebar {
+  width: 250px;
+  padding: 20px;
+  background-color: #f2f2f2;
+  border-right: 1px solid #ccc;
+  display: flex;
+  flex-direction: column;
+}
+
+.signature-scroll {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+  padding: 10px;
+  max-height: 300px;
+}
+
+.signature-item {
+  width: 100%;
+  margin-bottom: 10px;
+  border: 1px solid #aaa;
+  background-color: #fff;
+  cursor: grab;
+}
+
+.add-signature-button,
+.apply-button {
+  margin-top: 10px;
+  padding: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  background-color: #0066cc;
+  color: white;
+  border: none;
+  border-radius: 4px;
+}
+
+.apply-button {
+  background-color: #28a745;
+}
+
+.pdf-viewer {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+  background-color: #e6e6e6;
+}
+
+.pdf-pages-wrapper {
+  position: relative;
+  margin: 20px auto;
+  width: 600px;
+}
+
+.dropped-signature {
+  position: absolute;
+  border: 2px dashed #555;
+  background-color: white;
+  z-index: 10;
+}
