@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Interview Prep Doc
+INTERVIEW_PREP.md
