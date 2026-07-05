@@ -3,14 +3,15 @@ import WebViewer from "@pdftron/webviewer";
 
 export default function PDFSignerWebViewer() {
   const viewerRef = useRef<HTMLDivElement | null>(null);
+  const baseUrl = import.meta.env.BASE_URL;
 
   useEffect(() => {
     if (!viewerRef.current) return;
 
     WebViewer(
       {
-        path: "/lib/webviewer",
-        initialDoc: "/offerletter.pdf",
+        path: `${baseUrl}lib/webviewer`,
+        initialDoc: `${baseUrl}offerletter.pdf`,
         licenseKey:
           "demo:1753688332122:61857ab10300000000575ce7fe6cf7b196c7e100851cc1bd794aeb3fa7",
       },

@@ -1,12 +1,13 @@
 import { useRef, useState, useEffect } from "react";
 import PDFSignerView from "./PDFSignerView";
 import { PDFDocument } from "pdf-lib";
-import SignatureCanvas from "react-signature-canvas";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import SignatureCreateModal from "./SignatureCreateModal";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+
+const defaultPdfUrl = `${import.meta.env.BASE_URL}sample-document.pdf`;
 
 type DroppedSignature = {
   id: number;
@@ -26,27 +27,30 @@ type CanvasRef = {
 
 export default function PDFSigner() {
   // States and Refs
-  const [pdfUrl, setPdfUrl] = useState<string>("/sample-document.pdf");
+  const [pdfUrl, setPdfUrl] = useState<string>(defaultPdfUrl);
+  const [pdfError, setPdfError] = useState<string | null>(null);
   const [signatureList, setSignatureList] = useState<string[]>([]);
   const [droppedSignatures, setDroppedSignatures] = useState<DroppedSignature[]>(
     []
   );
-  const [typedSignature, setTypedSignature] = useState<string>("");
   const [scale] = useState<number>(1.5);
   const [showSignatureModal, setShowSignatureModal] = useState<boolean>(false);
 
-  const sigCanvasRef = useRef<SignatureCanvas | null>(null);
   const canvasRefs = useRef<CanvasRef[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const pdfContainerRef = useRef<HTMLDivElement | null>(null);
-  const [pdf, setPdf] = useState<any>(null);
 
   useEffect(() => {
+    setPdfError(null);
     const loadingTask = pdfjsLib.getDocument(pdfUrl);
-    loadingTask.promise.then((loadedPdf: any) => {
-      setPdf(loadedPdf);
-      renderPdfPages(loadedPdf);
-    });
+    loadingTask.promise
+      .then((loadedPdf: any) => {
+        renderPdfPages(loadedPdf);
+      })
+      .catch((error: unknown) => {
+        console.error("Failed to load PDF:", error);
+        setPdfError("Failed to load the PDF file.");
+      });
   }, [pdfUrl]);
 
   const renderPdfPages = async (pdf: any) => {
@@ -88,19 +92,6 @@ export default function PDFSigner() {
       setSignatureList((prev) => [...prev, signatureData]);
     }
     setShowSignatureModal(false);
-  };
-
-  // Signature Saving
-  const saveSignature = () => {
-    if (sigCanvasRef.current && !sigCanvasRef.current.isEmpty()) {
-      const dataUrl = sigCanvasRef.current
-        .getCanvas()
-        .toDataURL("image/png");
-      setSignatureList((prev) => [...prev, dataUrl]);
-      sigCanvasRef.current.clear();
-    } else {
-      alert("Please draw a signature first.");
-    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -183,16 +174,12 @@ export default function PDFSigner() {
       fileInputRef={fileInputRef}
       signatureList={signatureList}
       setSignatureList={setSignatureList}
-      sigCanvasRef={sigCanvasRef}
-      typedSignature={typedSignature}
-      setTypedSignature={setTypedSignature}
       droppedSignatures={droppedSignatures}
       setDroppedSignatures={setDroppedSignatures}
       handleFileChange={handleFileChange}
       applySignatureToPdf={applySignatureToPdf}
-      saveSignature={saveSignature}
-      showSignatureModal={showSignatureModal}
       setShowSignatureModal={setShowSignatureModal}
+      pdfError={pdfError}
       SignatureModalComponent={
         showSignatureModal ? (
           <SignatureCreateModal

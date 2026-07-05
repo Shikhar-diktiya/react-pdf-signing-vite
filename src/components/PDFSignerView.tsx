@@ -17,18 +17,14 @@ type PDFSignerViewProps = {
   fileInputRef: RefObject<HTMLInputElement | null>;
   signatureList: string[];
   setSignatureList: React.Dispatch<React.SetStateAction<string[]>>;
-  sigCanvasRef: RefObject<any>;
-  typedSignature: string;
-  setTypedSignature: React.Dispatch<React.SetStateAction<string>>;
   droppedSignatures: DroppedSignature[];
   setDroppedSignatures: React.Dispatch<
     React.SetStateAction<DroppedSignature[]>
   >;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   applySignatureToPdf: () => void;
-  saveSignature: () => void;
-  showSignatureModal: boolean;
   setShowSignatureModal: React.Dispatch<React.SetStateAction<boolean>>;
+  pdfError: string | null;
   SignatureModalComponent: React.ReactNode;
 };
 
@@ -37,16 +33,12 @@ export default function PDFSignerView({
   fileInputRef,
   signatureList,
   setSignatureList,
-  sigCanvasRef,
-  typedSignature,
-  setTypedSignature,
   droppedSignatures,
   setDroppedSignatures,
   handleFileChange,
   applySignatureToPdf,
-  saveSignature,
-  showSignatureModal,
   setShowSignatureModal,
+  pdfError,
   SignatureModalComponent,
 }: PDFSignerViewProps) {
 
@@ -192,6 +184,22 @@ export default function PDFSignerView({
           }}
         >
           {SignatureModalComponent}
+
+          {pdfError && (
+            <div
+              role="alert"
+              style={{
+                marginBottom: "10px",
+                padding: "10px 12px",
+                color: "#991b1b",
+                backgroundColor: "#fee2e2",
+                border: "1px solid #fecaca",
+                borderRadius: "6px",
+              }}
+            >
+              {pdfError}
+            </div>
+          )}
 
           <div
             ref={pdfContainerRef}
