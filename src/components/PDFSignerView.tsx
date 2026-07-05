@@ -1,7 +1,6 @@
 import React from "react";
 import type { RefObject } from "react";
 
-
 type DroppedSignature = {
   id: number;
   src: string;
@@ -14,6 +13,7 @@ type DroppedSignature = {
 
 type PDFSignerViewProps = {
   pdfContainerRef: RefObject<HTMLDivElement | null>;
+  pdfOuterContainerRef: RefObject<HTMLDivElement | null>;
   fileInputRef: RefObject<HTMLInputElement | null>;
   signatureList: string[];
   setSignatureList: React.Dispatch<React.SetStateAction<string[]>>;
@@ -25,11 +25,18 @@ type PDFSignerViewProps = {
   applySignatureToPdf: () => void;
   setShowSignatureModal: React.Dispatch<React.SetStateAction<boolean>>;
   pdfError: string | null;
+  handlePointerDown: (
+    e: React.PointerEvent<HTMLImageElement>,
+    sigId: number
+  ) => void;
+  handlePointerMove: (e: React.PointerEvent<HTMLImageElement>) => void;
+  handlePointerUp: (e: React.PointerEvent<HTMLImageElement>) => void;
   SignatureModalComponent: React.ReactNode;
 };
 
 export default function PDFSignerView({
   pdfContainerRef,
+  pdfOuterContainerRef,
   fileInputRef,
   signatureList,
   setSignatureList,
@@ -39,6 +46,9 @@ export default function PDFSignerView({
   applySignatureToPdf,
   setShowSignatureModal,
   pdfError,
+  handlePointerDown,
+  handlePointerMove,
+  handlePointerUp,
   SignatureModalComponent,
 }: PDFSignerViewProps) {
 
@@ -202,7 +212,7 @@ export default function PDFSignerView({
           )}
 
           <div
-            ref={pdfContainerRef}
+            ref={pdfOuterContainerRef}
             id="pdf-container"
             style={{
               height: "100%",
@@ -218,7 +228,7 @@ export default function PDFSignerView({
               const sigUrl = e.dataTransfer.getData("signature");
               if (!sigUrl || !pdfContainerRef.current) return;
 
-              const container = pdfContainerRef.current;
+              const container = e.currentTarget;
               const containerRect = container.getBoundingClientRect();
               const scrollTop = container.scrollTop;
               const scrollLeft = container.scrollLeft;
@@ -229,12 +239,12 @@ export default function PDFSignerView({
                 e.clientY - containerRect.top + scrollTop;
 
               const canvasElements = Array.from(
-                container.getElementsByClassName("pdf-page")
+                pdfContainerRef.current.getElementsByTagName("canvas")
               );
               let pageNumber = 1;
 
               for (let i = 0; i < canvasElements.length; i++) {
-                const canvas = canvasElements[i] as HTMLElement;
+                const canvas = canvasElements[i] as HTMLCanvasElement;
                 const top = canvas.offsetTop;
                 const bottom = top + canvas.offsetHeight;
 
@@ -253,8 +263,8 @@ export default function PDFSignerView({
                 {
                   id,
                   src: sigUrl,
-                  x: dropX,
-                  y: dropY,
+                  x: dropX - 75,
+                  y: dropY - 37.5,
                   width: 150,
                   height: 75,
                   pageNumber,
@@ -262,33 +272,19 @@ export default function PDFSignerView({
               ]);
             }}
           >
+            {/* Container where pdf canvases will be rendered */}
+            <div ref={pdfContainerRef} style={{ pointerEvents: "none" }} />
+
+            {/* Signature images positioned absolute to outer container */}
             {droppedSignatures.map((sig) => (
               <img
                 key={sig.id}
                 src={sig.src}
-                draggable
+                draggable={false}
                 alt="signature"
-                onDragEnd={(e) => {
-                  if (pdfContainerRef.current) {
-                    const container = pdfContainerRef.current;
-                    const containerRect =
-                      container.getBoundingClientRect();
-
-                    const scrollTop = container.scrollTop;
-                    const scrollLeft = container.scrollLeft;
-
-                    const x =
-                      e.clientX - containerRect.left + scrollLeft;
-                    const y =
-                      e.clientY - containerRect.top + scrollTop;
-
-                    setDroppedSignatures((prev) =>
-                      prev.map((s) =>
-                        s.id === sig.id ? { ...s, x, y } : s
-                      )
-                    );
-                  }
-                }}
+                onPointerDown={(e) => handlePointerDown(e, sig.id)}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
                 style={{
                   position: "absolute",
                   top: sig.y,
@@ -297,6 +293,7 @@ export default function PDFSignerView({
                   height: sig.height,
                   cursor: "move",
                   zIndex: 10,
+                  touchAction: "none",
                 }}
               />
             ))}

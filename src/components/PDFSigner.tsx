@@ -39,6 +39,12 @@ export default function PDFSigner() {
   const canvasRefs = useRef<CanvasRef[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const pdfContainerRef = useRef<HTMLDivElement | null>(null);
+  const pdfOuterContainerRef = useRef<HTMLDivElement | null>(null);
+  const dragRef = useRef<{
+    sigId: number;
+    grabOffsetX: number;
+    grabOffsetY: number;
+  } | null>(null);
 
   useEffect(() => {
     setPdfError(null);
@@ -96,11 +102,110 @@ export default function PDFSigner() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && file.type === "application/pdf") {
-      const fileUrl = URL.createObjectURL(file);
-      setPdfUrl(fileUrl);
-      setDroppedSignatures([]);
+    if (file) {
+      const isPdf =
+        file.type === "application/pdf" ||
+        file.name.toLowerCase().endsWith(".pdf");
+      if (isPdf) {
+        const fileUrl = URL.createObjectURL(file);
+        setPdfUrl(fileUrl);
+        setDroppedSignatures([]);
+      } else {
+        setPdfError("Please select a valid PDF file.");
+      }
     }
+  };
+
+  const handlePointerDown = (
+    e: React.PointerEvent<HTMLImageElement>,
+    sigId: number
+  ) => {
+    e.preventDefault();
+    const img = e.currentTarget;
+    img.setPointerCapture(e.pointerId);
+
+    const outerContainer = pdfOuterContainerRef.current;
+    if (!outerContainer) return;
+
+    const containerRect = outerContainer.getBoundingClientRect();
+    const scrollTop = outerContainer.scrollTop;
+    const scrollLeft = outerContainer.scrollLeft;
+
+    const sig = droppedSignatures.find((s) => s.id === sigId);
+    if (!sig) return;
+
+    const pointerX = e.clientX - containerRect.left + scrollLeft;
+    const pointerY = e.clientY - containerRect.top + scrollTop;
+
+    const grabOffsetX = pointerX - sig.x;
+    const grabOffsetY = pointerY - sig.y;
+
+    dragRef.current = {
+      sigId,
+      grabOffsetX,
+      grabOffsetY,
+    };
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLImageElement>) => {
+    if (!dragRef.current) return;
+    const { sigId, grabOffsetX, grabOffsetY } = dragRef.current;
+
+    const outerContainer = pdfOuterContainerRef.current;
+    if (!outerContainer) return;
+
+    const containerRect = outerContainer.getBoundingClientRect();
+    const scrollTop = outerContainer.scrollTop;
+    const scrollLeft = outerContainer.scrollLeft;
+
+    const pointerX = e.clientX - containerRect.left + scrollLeft;
+    const pointerY = e.clientY - containerRect.top + scrollTop;
+
+    const newX = pointerX - grabOffsetX;
+    const newY = pointerY - grabOffsetY;
+
+    setDroppedSignatures((prev) =>
+      prev.map((s) => (s.id === sigId ? { ...s, x: newX, y: newY } : s))
+    );
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLImageElement>) => {
+    if (!dragRef.current) return;
+    const { sigId } = dragRef.current;
+    const img = e.currentTarget;
+    img.releasePointerCapture(e.pointerId);
+    dragRef.current = null;
+
+    const outerContainer = pdfOuterContainerRef.current;
+    const innerContainer = pdfContainerRef.current;
+    if (!outerContainer || !innerContainer) return;
+
+    setDroppedSignatures((prev) => {
+      const sig = prev.find((s) => s.id === sigId);
+      if (!sig) return prev;
+
+      const canvasElements = Array.from(
+        innerContainer.getElementsByTagName("canvas")
+      );
+      let pageNumber = 1;
+      const sigCenterY = sig.y + sig.height / 2;
+
+      for (let i = 0; i < canvasElements.length; i++) {
+        const canvas = canvasElements[i] as HTMLCanvasElement;
+        const top = canvas.offsetTop;
+        const bottom = top + canvas.offsetHeight;
+
+        if (sigCenterY >= top && sigCenterY <= bottom) {
+          pageNumber = parseInt(
+            canvas.dataset.pageNumber || `${i + 1}`,
+            10
+          );
+          break;
+        }
+      }
+
+      return prev.map((s) => (s.id === sigId ? { ...s, pageNumber } : s));
+    });
   };
 
   const applySignatureToPdf = async () => {
@@ -136,10 +241,13 @@ export default function PDFSigner() {
       const canvasWidth = canvasRef.width;
       const canvasHeight = canvasRef.height;
 
+      const canvasLeft = canvasRef.canvas.offsetLeft;
       const canvasTop = canvasRef.canvas.offsetTop;
+
+      const relativeX = sig.x - canvasLeft;
       const relativeY = sig.y - canvasTop;
 
-      const relX = (sig.x / canvasWidth) * pdfWidth;
+      const relX = (relativeX / canvasWidth) * pdfWidth;
       const relY =
         pdfHeight -
         ((relativeY + sig.height) / canvasHeight) * pdfHeight;
@@ -171,6 +279,7 @@ export default function PDFSigner() {
   return (
     <PDFSignerView
       pdfContainerRef={pdfContainerRef}
+      pdfOuterContainerRef={pdfOuterContainerRef}
       fileInputRef={fileInputRef}
       signatureList={signatureList}
       setSignatureList={setSignatureList}
@@ -180,6 +289,9 @@ export default function PDFSigner() {
       applySignatureToPdf={applySignatureToPdf}
       setShowSignatureModal={setShowSignatureModal}
       pdfError={pdfError}
+      handlePointerDown={handlePointerDown}
+      handlePointerMove={handlePointerMove}
+      handlePointerUp={handlePointerUp}
       SignatureModalComponent={
         showSignatureModal ? (
           <SignatureCreateModal
