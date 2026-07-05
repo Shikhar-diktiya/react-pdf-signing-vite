@@ -272,10 +272,8 @@ export default function PDFSignerView({
               ]);
             }}
           >
-            {/* Container where pdf canvases will be rendered */}
             <div ref={pdfContainerRef} style={{ pointerEvents: "none" }} />
 
-            {/* Signature images positioned absolute to outer container */}
             {droppedSignatures.map((sig) => (
               <img
                 key={sig.id}

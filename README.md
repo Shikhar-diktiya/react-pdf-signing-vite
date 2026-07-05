@@ -1,101 +1,60 @@
-# React + TypeScript + Vite
-
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
 # React PDF Signing App (Vite + TypeScript)
 
-A web app to view PDFs in the browser, create signatures, drag-and-drop them onto PDF pages, and download the signed PDF.
+A modern, responsive, client-side web application designed to render PDF documents, create signatures (by drawing, typing, or image upload), drag-and-drop signatures onto document pages, position them precisely, and export the signed PDF.
 
-Migrated from a Next.js (JavaScript) project to **Vite + TypeScript**.
+## 🚀 Features
 
----
+- **Robust PDF Loading**: Supports uploading and rendering any PDF document locally in the browser using `pdfjs-dist`.
+- **Signature Creation Modal**: Three modes of signature generation:
+  - **Draw**: Freehand drawing using a canvas.
+  - **Type**: Styled text input simulating handwriting.
+  - **Upload**: Uploading pre-captured signature images.
+- **Drag-and-Drop Placement**: Drag signature templates from the sidebar and place them directly onto the PDF document.
+- **Precision Pointer-Events Dragging**: Seamless repositioning of placed signatures across pages with mouse or touch gestures (using unified Pointer Events).
+- **Accurate Coordinate Mapping**: Automatically translates container CSS coordinates to original PDF page coordinates based on canvas offsets and scaling factors.
+- **Client-Side Compilation**: Injects signature images directly into the PDF structure on the client side using `pdf-lib` and triggers an automatic download.
 
-## Tech Stack
+## 🛠️ Tech Stack
 
-- React  
-- Vite  
-- TypeScript  
-- Tailwind CSS  
-- pdf-lib  
-- pdfjs-dist  
-- react-signature-canvas  
-- lucide-react  
-- Apryse WebViewer (optional)
+- **Framework**: React 19
+- **Build System**: Vite 7
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS / Vanilla CSS
+- **PDF Core**: `pdfjs-dist` (for rendering) and `pdf-lib` (for editing and exporting)
+- **Signature Input**: `react-signature-canvas`
+- **Icons**: `lucide-react`
 
----
+## 📦 Getting Started
 
-## Setup
+### Prerequisites
 
+Ensure you have [Node.js](https://nodejs.org/) installed (v18+ recommended).
+
+### Installation
+
+1. Clone the repository and navigate to the project directory:
+   ```bash
+   git clone <repository-url>
+   cd react-pdf-signing-vite
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+### Development
+
+Start the Vite development server:
 ```bash
-npm install
 npm run dev
+```
+Open `http://localhost:5173/react-pdf-signing-vite/` in your browser.
 
+### Production Build
+
+Compile and bundle the project for production:
+```bash
+npm run build
+```
+Build outputs will be generated in the `docs` folder.
